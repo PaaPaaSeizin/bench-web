@@ -3,20 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SYSTEM STRESS TESTER - HUB</title>
+    <title>HARDWARE ANALYZER v1.1</title>
     <style>
         :root {
-            --bg: #080808;
-            --panel: #121212;
-            --accent: #ff3c00;
-            --text: #e0e0e0;
-            --highlight: #00ff41;
+            --bg-color: #050505;
+            --panel-bg: #121212;
+            --accent: #007aff;
+            --danger: #ff3b30;
+            --text-main: #ffffff;
+            --text-dim: #888;
+            --border: #2c2c2e;
+            --list-bg: #1c1c1e;
         }
 
         body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Consolas', 'Monaco', monospace;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Roboto, Helvetica, sans-serif;
             margin: 0;
             display: flex;
             justify-content: center;
@@ -24,214 +27,176 @@
             min-height: 100vh;
         }
 
-        .hub-container {
-            width: 900px;
-            background: var(--panel);
-            border: 1px solid #333;
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            box-shadow: 0 0 40px rgba(0,0,0,0.8);
+        .main-card {
+            width: 95%;
+            max-width: 700px;
+            background: var(--panel-bg);
+            border-radius: 24px;
+            padding: 40px;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.8);
         }
 
-        /* サイドバー：システム情報 */
-        .sidebar {
-            padding: 20px;
-            border-right: 1px solid #333;
-            background: #0c0c0c;
-        }
+        h1 { font-size: 1.8rem; margin: 0; text-align: center; }
+        .subtitle { color: var(--text-dim); font-size: 0.8rem; margin-bottom: 30px; text-align: center; }
 
-        .sidebar h2 {
-            font-size: 1.2rem;
-            color: var(--accent);
-            border-bottom: 2px solid var(--accent);
-            padding-bottom: 10px;
-        }
-
-        .info-box {
-            font-size: 0.85rem;
-            margin-top: 20px;
-            color: #888;
-        }
-
-        .info-box b { color: #ccc; }
-
-        /* メイン：テスト選択パネル */
-        .main-panel {
-            padding: 30px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .header-area {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            margin-bottom: 30px;
-        }
-
-        .score-display {
-            text-align: right;
-        }
-
-        .score-val {
-            font-size: 3.5rem;
-            font-weight: bold;
-            line-height: 1;
-            color: var(--highlight);
-        }
-
-        /* テストカード */
-        .test-grid {
+        .specs-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 15px;
             margin-bottom: 30px;
         }
 
-        .test-card {
-            border: 1px solid #222;
+        /* 1カラムにするモバイル対応 */
+        @media (max-width: 600px) { .specs-grid { grid-template-columns: 1fr; } }
+
+        .spec-group {
+            background: var(--list-bg);
             padding: 15px;
-            cursor: pointer;
-            transition: 0.2s;
-            position: relative;
+            border-radius: 12px;
+            border: 1px solid #252525;
         }
 
-        .test-card:hover {
-            border-color: var(--accent);
-            background: #1a1a1a;
+        .group-label {
+            font-size: 0.7rem;
+            color: var(--accent);
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+            display: block;
         }
 
-        .test-card.selected {
-            border-color: var(--accent);
-            background: #200a05;
+        .spec-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
         }
 
-        .test-card h3 { margin: 0 0 5px 0; font-size: 1rem; }
-        .test-card p { margin: 0; font-size: 0.75rem; color: #666; }
+        .label { color: var(--text-dim); }
+        .value { color: var(--text-main); font-weight: 500; font-family: monospace; }
 
-        /* 起爆ボタン */
-        .launch-area {
-            margin-top: auto;
-            border-top: 1px solid #333;
-            padding-top: 20px;
-            text-align: center;
-        }
-
-        #launch-btn {
-            background: var(--accent);
+        #start-btn {
+            background: var(--danger);
             color: white;
             border: none;
             width: 100%;
-            padding: 20px;
-            font-size: 1.5rem;
-            font-weight: bold;
+            padding: 22px;
+            font-size: 1.4rem;
+            font-weight: 800;
+            border-radius: 16px;
             cursor: pointer;
-            clip-path: polygon(0 0, 95% 0, 100% 30%, 100% 100%, 5% 100%, 0 70%);
+            transition: 0.2s;
+            box-shadow: 0 8px 15px rgba(255, 59, 48, 0.2);
         }
 
-        #launch-btn:hover { filter: brightness(1.2); }
-
-        /* オーバーレイ表示 */
-        #monitor-overlay {
-            display: none;
-            position: fixed;
-            top:0; left:0; width:100%; height:100%;
-            background: #000;
-            z-index: 1000;
-            color: var(--highlight);
-            padding: 20px;
-            box-sizing: border-box;
-            font-size: 0.9rem;
-        }
+        #start-btn:hover { filter: brightness(1.2); transform: scale(1.01); }
     </style>
 </head>
 <body>
 
-<div class="hub-container">
-    <div class="sidebar">
-        <h2>HARDWARE MONITOR</h2>
-        <div class="info-box">
-            <p>OS: <b>PaaOS Evolution</b></p>
-            <p>CORE: <b>v1.3.x</b></p>
-            <p>ENGINE: <b>CZ-NULL Protocol</b></p>
-            <hr style="border:0; border-top:1px solid #222;">
-            <p>STATUS: <span id="status-tag" style="color:var(--highlight)">STANDBY</span></p>
+<div class="main-card">
+    <h1>SYSTEM ARCHITECTURE</h1>
+    <p class="subtitle">PRE-RUN HARDWARE ANALYSIS</p>
+
+    <div class="specs-grid">
+        <div class="spec-group">
+            <span class="group-label">PROCESSOR</span>
+            <div class="spec-row">
+                <span class="label">Model</span>
+                <span class="value" id="cpu-name">Analyzing...</span>
+            </div>
+            <div class="spec-row">
+                <span class="label">Logical Cores</span>
+                <span class="value" id="cpu-threads">--</span>
+            </div>
+        </div>
+
+        <div class="spec-group">
+            <span class="group-label">GRAPHICS</span>
+            <div class="spec-row">
+                <span class="label">Renderer</span>
+                <span class="value" id="gpu-name">Analyzing...</span>
+            </div>
+            <div class="spec-row">
+                <span class="label">VRAM (Est.)</span>
+                <span class="value" id="gpu-vram">--</span>
+            </div>
+        </div>
+
+        <div class="spec-group">
+            <span class="group-label">MEMORY</span>
+            <div class="spec-row">
+                <span class="label">Capacity</span>
+                <span class="value" id="ram-cap">--</span>
+            </div>
+            <div class="spec-row">
+                <span class="label">Clock / Type</span>
+                <span class="value" id="ram-detail">Detecting...</span>
+            </div>
+        </div>
+
+        <div class="spec-group">
+            <span class="group-label">ENVIRONMENT</span>
+            <div class="spec-row">
+                <span class="label">Platform</span>
+                <span class="value" id="sys-os">--</span>
+            </div>
+            <div class="spec-row">
+                <span class="label">Engine</span>
+                <span class="value">WebGL 2.0</span>
+            </div>
         </div>
     </div>
 
-    <div class="main-panel">
-        <div class="header-area">
-            <div class="title">
-                <h1 style="margin:0; font-size: 1.5rem;">HELL-MARK SYSTEM</h1>
-                <p style="margin:0; font-size: 0.7rem; color: #555;">BEYOND THE LIMITS OF SILICON</p>
-            </div>
-            <div class="score-display">
-                <div class="score-label" style="font-size: 0.7rem;">PREVIOUS SCORE</div>
-                <div class="score-val" id="last-score">0</div>
-            </div>
-        </div>
-
-        <div class="test-grid">
-            <div class="test-card selected" onclick="toggleTest(this)">
-                <h3>GPU: Geometry Stress</h3>
-                <p>高ポリゴン・シェーダー負荷による描画限界の測定</p>
-            </div>
-            <div class="test-card selected" onclick="toggleTest(this)">
-                <h3>CPU: Multi-Thread Prime</h3>
-                <p>Workerスレッドを用いた全論理コアへの最大負荷</p>
-            </div>
-            <div class="test-card" onclick="toggleTest(this)">
-                <h3>MEM: VRAM Flooding</h3>
-                <p>4Kテクスチャの連続転送によるバス帯域負荷</p>
-            </div>
-            <div class="test-card" onclick="toggleTest(this)">
-                <h3>IO: Buffer Stress</h3>
-                <p>非同期書き込みによるキャッシュ負荷</p>
-            </div>
-        </div>
-
-        <div class="launch-area">
-            <button id="launch-btn">DETONATE ALL SEQUENCES</button>
-        </div>
-    </div>
-</div>
-
-<div id="monitor-overlay">
-    <div id="log-output"></div>
-    <canvas id="benchmark-canvas" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:-1; opacity:0.3;"></canvas>
+    <button id="start-btn">LAUNCH BENCHMARK</button>
 </div>
 
 <script>
-    function toggleTest(el) {
-        el.classList.toggle('selected');
+    async function analyze() {
+        // --- CPU Analysis ---
+        const threads = navigator.hardwareConcurrency || "Unknown";
+        document.getElementById('cpu-threads').innerText = threads + " Threads";
+        // ブラウザから詳細なCPU名は取得不可のため、スレッド数から種別を推測表示するのが一般的
+        document.getElementById('cpu-name').innerText = threads >= 16 ? "High-End Multicore" : "Standard Processor";
+
+        // --- GPU Analysis ---
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+        if (gl) {
+            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            const renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "Generic";
+            document.getElementById('gpu-name').innerText = renderer.split(',')[0].replace(/ANGLE \(.*\)/, '').trim();
+
+            // VRAM推計 (WebGLのテクスチャ制限から概算)
+            const vram = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+            const vramEst = vram >= 16384 ? ">= 8GB" : "4GB or Less";
+            document.getElementById('gpu-vram').innerText = vramEst;
+        }
+
+        // --- Memory Analysis ---
+        if (navigator.deviceMemory) {
+            document.getElementById('ram-cap').innerText = navigator.deviceMemory + " GB";
+            // 規格と周波数はJSで取得不可のため、現代の標準的な値を推測（またはベンチ後に判定）
+            document.getElementById('ram-detail').innerText = "DDR4/5 @ High-Freq";
+        } else {
+            document.getElementById('ram-cap').innerText = "Unknown";
+            document.getElementById('ram-detail').innerText = "N/A";
+        }
+
+        // --- OS ---
+        const platform = navigator.platform;
+        document.getElementById('sys-os').innerText = platform;
     }
 
-    const launchBtn = document.getElementById('launch-btn');
-    const overlay = document.getElementById('monitor-overlay');
-    const logOut = document.getElementById('log-output');
+    window.onload = analyze;
 
-    launchBtn.onclick = () => {
-        overlay.style.display = 'block';
-        log('INITIALIZING CZ-NULL PROTOCOL...');
-        log('LOADING ASSETS FROM /assets/mesh_highpoly.obj...');
-        log('WARNING: COIL WHINE EXPECTED DUE TO UNLIMITED FPS...');
-        
-        // 実際の起爆処理（各モジュールへ）
-        setTimeout(startSequence, 1000);
+    document.getElementById('start-btn').onclick = () => {
+        // ここで次の工程（2番のベンチマーク処理）を呼び出す
+        console.log("Starting Benchmark Engineering...");
+        alert("起爆シーケンスを開始します。");
     };
-
-    function log(msg) {
-        const p = document.createElement('div');
-        p.innerText = `> ${msg}`;
-        logOut.appendChild(p);
-    }
-
-    function startSequence() {
-        // ここに、assets/フォルダからモデルを読み込み、
-        // WebGLで100万インスタンスを描画するような「本物の負荷」エンジンを接続します。
-        log('EXECUTING GPU STRESS...');
-    }
 </script>
-
 </body>
 </html>
