@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HELL-MARK Benchmark v1.0</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>HELL-MARK <span class="version">v1.0</span></h1>
+            <p class="subtitle">System Stress Test & Performance Analysis</p>
+        </header>
+
+        <main>
+            <section class="score-container">
+                <div class="score-circle">
+                    <span id="total-score">----</span>
+                    <label>OVERALL SCORE</label>
+                </div>
+                <div class="device-info">
+                    <p>GPU: <span id="gpu-name">Detecting...</span></p>
+                    <p>Status: <span id="system-status">Ready</span></p>
+                </div>
+            </section>
+
+            <section class="test-menu">
+                <div class="test-card active" data-test="gpu-high-poly">
+                    <h3>Extreme GPU Stress</h3>
+                    <p>数千万ポリゴン描画による高負荷テスト（コイル鳴き注意）</p>
+                </div>
+                <div class="test-card" data-test="cpu-calc">
+                    <h3>Multi-Core Compute</h3>
+                    <p>超多倍長整数演算によるCPU限界突破テスト</p>
+                </div>
+                <div class="test-card" data-test="memory-fill">
+                    <h3>Memory Flooding</h3>
+                    <p>VRAM/RAMへの高解像度テクスチャ大量転送</p>
+                </div>
+            </section>
+
+            <button id="run-btn">RUN BENCHMARK</button>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 PaaOS Project / Inspired by cznull</p>
+        </footer>
+    </div>
+
+    <div id="overlay" class="hidden">
+        <canvas id="benchmark-canvas"></canvas>
+        <div class="live-stats">
+            <div id="fps-counter">FPS: 0</div>
+            <div id="progress-bar"><div id="progress-fill"></div></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
