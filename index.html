@@ -3,59 +3,235 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HELL-MARK Benchmark v1.0</title>
-    <link rel="stylesheet" href="style.css">
+    <title>SYSTEM STRESS TESTER - HUB</title>
+    <style>
+        :root {
+            --bg: #080808;
+            --panel: #121212;
+            --accent: #ff3c00;
+            --text: #e0e0e0;
+            --highlight: #00ff41;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Consolas', 'Monaco', monospace;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .hub-container {
+            width: 900px;
+            background: var(--panel);
+            border: 1px solid #333;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            box-shadow: 0 0 40px rgba(0,0,0,0.8);
+        }
+
+        /* サイドバー：システム情報 */
+        .sidebar {
+            padding: 20px;
+            border-right: 1px solid #333;
+            background: #0c0c0c;
+        }
+
+        .sidebar h2 {
+            font-size: 1.2rem;
+            color: var(--accent);
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 10px;
+        }
+
+        .info-box {
+            font-size: 0.85rem;
+            margin-top: 20px;
+            color: #888;
+        }
+
+        .info-box b { color: #ccc; }
+
+        /* メイン：テスト選択パネル */
+        .main-panel {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 30px;
+        }
+
+        .score-display {
+            text-align: right;
+        }
+
+        .score-val {
+            font-size: 3.5rem;
+            font-weight: bold;
+            line-height: 1;
+            color: var(--highlight);
+        }
+
+        /* テストカード */
+        .test-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .test-card {
+            border: 1px solid #222;
+            padding: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+            position: relative;
+        }
+
+        .test-card:hover {
+            border-color: var(--accent);
+            background: #1a1a1a;
+        }
+
+        .test-card.selected {
+            border-color: var(--accent);
+            background: #200a05;
+        }
+
+        .test-card h3 { margin: 0 0 5px 0; font-size: 1rem; }
+        .test-card p { margin: 0; font-size: 0.75rem; color: #666; }
+
+        /* 起爆ボタン */
+        .launch-area {
+            margin-top: auto;
+            border-top: 1px solid #333;
+            padding-top: 20px;
+            text-align: center;
+        }
+
+        #launch-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            clip-path: polygon(0 0, 95% 0, 100% 30%, 100% 100%, 5% 100%, 0 70%);
+        }
+
+        #launch-btn:hover { filter: brightness(1.2); }
+
+        /* オーバーレイ表示 */
+        #monitor-overlay {
+            display: none;
+            position: fixed;
+            top:0; left:0; width:100%; height:100%;
+            background: #000;
+            z-index: 1000;
+            color: var(--highlight);
+            padding: 20px;
+            box-sizing: border-box;
+            font-size: 0.9rem;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>HELL-MARK <span class="version">v1.0</span></h1>
-            <p class="subtitle">System Stress Test & Performance Analysis</p>
-        </header>
 
-        <main>
-            <section class="score-container">
-                <div class="score-circle">
-                    <span id="total-score">----</span>
-                    <label>OVERALL SCORE</label>
-                </div>
-                <div class="device-info">
-                    <p>GPU: <span id="gpu-name">Detecting...</span></p>
-                    <p>Status: <span id="system-status">Ready</span></p>
-                </div>
-            </section>
-
-            <section class="test-menu">
-                <div class="test-card active" data-test="gpu-high-poly">
-                    <h3>Extreme GPU Stress</h3>
-                    <p>数千万ポリゴン描画による高負荷テスト（コイル鳴き注意）</p>
-                </div>
-                <div class="test-card" data-test="cpu-calc">
-                    <h3>Multi-Core Compute</h3>
-                    <p>超多倍長整数演算によるCPU限界突破テスト</p>
-                </div>
-                <div class="test-card" data-test="memory-fill">
-                    <h3>Memory Flooding</h3>
-                    <p>VRAM/RAMへの高解像度テクスチャ大量転送</p>
-                </div>
-            </section>
-
-            <button id="run-btn">RUN BENCHMARK</button>
-        </main>
-
-        <footer>
-            <p>&copy; 2026 PaaOS Project / Inspired by cznull</p>
-        </footer>
-    </div>
-
-    <div id="overlay" class="hidden">
-        <canvas id="benchmark-canvas"></canvas>
-        <div class="live-stats">
-            <div id="fps-counter">FPS: 0</div>
-            <div id="progress-bar"><div id="progress-fill"></div></div>
+<div class="hub-container">
+    <div class="sidebar">
+        <h2>HARDWARE MONITOR</h2>
+        <div class="info-box">
+            <p>OS: <b>PaaOS Evolution</b></p>
+            <p>CORE: <b>v1.3.x</b></p>
+            <p>ENGINE: <b>CZ-NULL Protocol</b></p>
+            <hr style="border:0; border-top:1px solid #222;">
+            <p>STATUS: <span id="status-tag" style="color:var(--highlight)">STANDBY</span></p>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <div class="main-panel">
+        <div class="header-area">
+            <div class="title">
+                <h1 style="margin:0; font-size: 1.5rem;">HELL-MARK SYSTEM</h1>
+                <p style="margin:0; font-size: 0.7rem; color: #555;">BEYOND THE LIMITS OF SILICON</p>
+            </div>
+            <div class="score-display">
+                <div class="score-label" style="font-size: 0.7rem;">PREVIOUS SCORE</div>
+                <div class="score-val" id="last-score">0</div>
+            </div>
+        </div>
+
+        <div class="test-grid">
+            <div class="test-card selected" onclick="toggleTest(this)">
+                <h3>GPU: Geometry Stress</h3>
+                <p>高ポリゴン・シェーダー負荷による描画限界の測定</p>
+            </div>
+            <div class="test-card selected" onclick="toggleTest(this)">
+                <h3>CPU: Multi-Thread Prime</h3>
+                <p>Workerスレッドを用いた全論理コアへの最大負荷</p>
+            </div>
+            <div class="test-card" onclick="toggleTest(this)">
+                <h3>MEM: VRAM Flooding</h3>
+                <p>4Kテクスチャの連続転送によるバス帯域負荷</p>
+            </div>
+            <div class="test-card" onclick="toggleTest(this)">
+                <h3>IO: Buffer Stress</h3>
+                <p>非同期書き込みによるキャッシュ負荷</p>
+            </div>
+        </div>
+
+        <div class="launch-area">
+            <button id="launch-btn">DETONATE ALL SEQUENCES</button>
+        </div>
+    </div>
+</div>
+
+<div id="monitor-overlay">
+    <div id="log-output"></div>
+    <canvas id="benchmark-canvas" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:-1; opacity:0.3;"></canvas>
+</div>
+
+<script>
+    function toggleTest(el) {
+        el.classList.toggle('selected');
+    }
+
+    const launchBtn = document.getElementById('launch-btn');
+    const overlay = document.getElementById('monitor-overlay');
+    const logOut = document.getElementById('log-output');
+
+    launchBtn.onclick = () => {
+        overlay.style.display = 'block';
+        log('INITIALIZING CZ-NULL PROTOCOL...');
+        log('LOADING ASSETS FROM /assets/mesh_highpoly.obj...');
+        log('WARNING: COIL WHINE EXPECTED DUE TO UNLIMITED FPS...');
+        
+        // 実際の起爆処理（各モジュールへ）
+        setTimeout(startSequence, 1000);
+    };
+
+    function log(msg) {
+        const p = document.createElement('div');
+        p.innerText = `> ${msg}`;
+        logOut.appendChild(p);
+    }
+
+    function startSequence() {
+        // ここに、assets/フォルダからモデルを読み込み、
+        // WebGLで100万インスタンスを描画するような「本物の負荷」エンジンを接続します。
+        log('EXECUTING GPU STRESS...');
+    }
+</script>
+
 </body>
 </html>
