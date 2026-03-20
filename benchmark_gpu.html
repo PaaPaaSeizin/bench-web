@@ -16,6 +16,7 @@
         .danger-text { color: #ff3b30; font-weight: bold; animation: blink 0.5s step-end infinite; }
         @keyframes blink { 50% { opacity: 0; } }
         canvas { display: block; }
+        #error-log { color: #ff3b30; font-size: 0.8rem; margin-top: 5px; display: none; }
     </style>
 </head>
 <body>
@@ -26,40 +27,68 @@
     <div>FPS: <span id="fps-count">0</span></div>
     <div>VRAM LOAD: <span id="vram-stat">LOADING...</span></div>
     <div class="bar-container"><div id="progress-bar"></div></div>
-    <div id="status-msg" style="font-size: 0.8rem; margin-top: 10px; color: #888;">INITIALIZING VRAM STREAMING...</div>
+    <div id="status-msg" style="font-size: 0.8rem; margin-top: 10px; color: #888;">INITIALIZING GPU ENGINE...</div>
+    <div id="error-log"></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.161.0/three.min.js"></script>
 
 <script>
+    // グローバル変数の宣言
     let scene, camera, renderer, cubeCamera, mirrorSphere, clock;
-    let textures = [];
-    const TEST_DURATION = 15000; // 15秒間（GPU編の長さ）
-    const startTime = Date.now();
+    let lastFrameTime = performance.now();
+    const TEST_DURATION = 15000; 
+    let startTime;
+
+    // THREEが読み込まれているかチェックしてから開始する関数
+    function checkAndInit() {
+        if (typeof THREE !== 'undefined') {
+            console.log("Three.js Loaded. Starting Init...");
+            init().catch(err => {
+                console.error(err);
+                const log = document.getElementById('error-log');
+                log.style.display = 'block';
+                log.innerText = "Error: " + err.message;
+            });
+        } else {
+            console.log("Waiting for Three.js...");
+            setTimeout(checkAndInit, 100);
+        }
+    }
 
     async function init() {
+        startTime = Date.now();
+        
+        // --- 1. Scene & Camera ---
         scene = new THREE.Scene();
         camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
         camera.position.set(0, 5, 15);
 
+        // --- 2. Renderer ---
         renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
-        // 影と反射の演算を最大化
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.body.appendChild(renderer.domElement);
 
-        // --- 1. VRAMストリーミング準備 (100MB画像の読み込み) ---
+        // --- 3. VRAM Streaming (Texture) ---
         const texLoader = new THREE.TextureLoader();
-        // assets/texture.jpg を使用。リピート設定で負荷を上げる
-        const heavyTexture = await texLoader.loadAsync('assets/texture.jpg');
-        heavyTexture.wrapS = THREE.RepeatWrapping;
-        heavyTexture.wrapT = THREE.RepeatWrapping;
-        document.getElementById('vram-stat').innerText = "100MB TEXTURE ACTIVE";
+        let heavyTexture;
+        try {
+            // 画像読み込み。失敗しても止まらないようにエラーハンドリング
+            heavyTexture = await texLoader.loadAsync('assets/texture.jpg');
+            heavyTexture.wrapS = THREE.RepeatWrapping;
+            heavyTexture.wrapT = THREE.RepeatWrapping;
+            document.getElementById('vram-stat').innerText = "100MB TEXTURE ACTIVE";
+        } catch (e) {
+            console.warn("Texture not found, using fallback.");
+            document.getElementById('vram-stat').innerText = "FALLBACK TEXTURE";
+            // 代わりのダミーテクスチャ生成
+            heavyTexture = new THREE.DataTexture(new Uint8Array([255,0,0,255]),1,1,THREE.RGBAFormat);
+        }
 
-        // --- 2. 鏡面反射（レイトレ風）用カメラ ---
-        // 周囲の景色を毎フレーム6方向にレンダリングして反射させる（計算量激増）
+        // --- 4. Reflection (CubeCamera) ---
         const cubeRenderTarget = new THREE.WebGLCubeRenderTarget(512, { 
             generateMipmaps: true, 
             minFilter: THREE.LinearMipmapLinearFilter 
@@ -67,15 +96,14 @@
         cubeCamera = new THREE.CubeCamera(0.1, 1000, cubeRenderTarget);
         scene.add(cubeCamera);
 
-        // --- 3. 超高ポリゴン球体の生成 (ジオメトリ負荷) ---
-        // 分割数512x512 = 約52万ポリゴンの球体
+        // --- 5. High-Poly Geometry (512x512 = 約52万ポリゴン) ---
         const geometry = new THREE.SphereGeometry(5, 512, 512);
         const material = new THREE.MeshStandardMaterial({
             map: heavyTexture,
-            envMap: cubeRenderTarget.texture, // リアルタイム反射
+            envMap: cubeRenderTarget.texture,
             roughness: 0.05,
             metalness: 1.0,
-            bumpMap: heavyTexture, // バンプマップ計算追加
+            bumpMap: heavyTexture,
             bumpScale: 0.05
         });
 
@@ -83,7 +111,7 @@
         mirrorSphere.castShadow = true;
         scene.add(mirrorSphere);
 
-        // 周囲にさらに数万の小さなポリゴンをバラ撒く
+        // 周囲に500個のBoxを配置して描画負荷を増やす
         const smallGeo = new THREE.BoxGeometry(1, 1, 1);
         for(let i=0; i<500; i++) {
             const m = new THREE.Mesh(smallGeo, material);
@@ -91,7 +119,7 @@
             scene.add(m);
         }
 
-        // ライティング
+        // --- 6. Lights ---
         const light = new THREE.DirectionalLight(0xffffff, 2);
         light.position.set(10, 20, 10);
         light.castShadow = true;
@@ -99,6 +127,7 @@
         scene.add(light);
         scene.add(new THREE.AmbientLight(0x202020));
 
+        document.getElementById('status-msg').innerText = "ENGINE RUNNING...";
         animate();
     }
 
@@ -113,41 +142,50 @@
 
         document.getElementById('progress-bar').style.width = progress + "%";
         
-        // --- 負荷の更新 ---
-        mirrorSphere.rotation.y += 0.01;
-        mirrorSphere.rotation.x += 0.005;
-
-        // リアルタイム反射の更新（毎フレーム実行：非常に重い）
-        mirrorSphere.visible = false; // 自分が映らないように隠す
-        cubeCamera.update(renderer, scene);
-        mirrorSphere.visible = true;
+        // --- High Load Logic ---
+        if (mirrorSphere) {
+            mirrorSphere.rotation.y += 0.01;
+            mirrorSphere.rotation.x += 0.005;
+            
+            // リアルタイム反射の更新（これ自体が非常に重い）
+            mirrorSphere.visible = false; 
+            cubeCamera.update(renderer, scene);
+            mirrorSphere.visible = true;
+        }
 
         renderer.render(scene, camera);
 
-        // 統計表示
-        document.getElementById('fps-count').innerText = Math.round(1000 / (performance.now() - lastFrameTime));
+        // --- Stats ---
+        const now = performance.now();
+        const delta = now - lastFrameTime;
+        document.getElementById('fps-count').innerText = Math.round(1000 / delta);
         document.getElementById('tri-count').innerText = renderer.info.render.triangles.toLocaleString();
-        lastFrameTime = performance.now();
+        lastFrameTime = now;
 
         requestAnimationFrame(animate);
     }
-    let lastFrameTime = performance.now();
 
-    // --- CPU編へつなぐ道路 ---
     function finishGpuTest() {
         document.getElementById('status-msg').innerHTML = "<span class='danger-text'>GPU TEST COMPLETE. SYNCING CPU...</span>";
-        
-        // スコア（FPSの平均値など）をローカルストレージに保存して引き継ぐ
         const gpuScore = renderer.info.render.triangles / 1000; 
         localStorage.setItem('gpu_result', gpuScore);
 
         setTimeout(() => {
-            // CPU編のHTMLへリダイレクト
+            // CPU編へ
             window.location.href = "benchmark_cpu.html";
         }, 2000);
     }
 
-    window.onload = init;
+    // ウィンドウリサイズ対応
+    window.addEventListener('resize', () => {
+        if (!camera || !renderer) return;
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // 実行開始
+    checkAndInit();
 </script>
 
 </body>
