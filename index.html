@@ -47,7 +47,6 @@
             margin-bottom: 30px;
         }
 
-        /* 1カラムにするモバイル対応 */
         @media (max-width: 600px) { .specs-grid { grid-template-columns: 1fr; } }
 
         .spec-group {
@@ -155,13 +154,10 @@
 
 <script>
     async function analyze() {
-        // --- CPU Analysis ---
         const threads = navigator.hardwareConcurrency || "Unknown";
         document.getElementById('cpu-threads').innerText = threads + " Threads";
-        // ブラウザから詳細なCPU名は取得不可のため、スレッド数から種別を推測表示するのが一般的
         document.getElementById('cpu-name').innerText = threads >= 16 ? "High-End Multicore" : "Standard Processor";
 
-        // --- GPU Analysis ---
         const canvas = document.createElement('canvas');
         const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
         if (gl) {
@@ -169,23 +165,19 @@
             const renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "Generic";
             document.getElementById('gpu-name').innerText = renderer.split(',')[0].replace(/ANGLE \(.*\)/, '').trim();
 
-            // VRAM推計 (WebGLのテクスチャ制限から概算)
             const vram = gl.getParameter(gl.MAX_TEXTURE_SIZE);
             const vramEst = vram >= 16384 ? ">= 8GB" : "4GB or Less";
             document.getElementById('gpu-vram').innerText = vramEst;
         }
 
-        // --- Memory Analysis ---
         if (navigator.deviceMemory) {
             document.getElementById('ram-cap').innerText = navigator.deviceMemory + " GB";
-            // 規格と周波数はJSで取得不可のため、現代の標準的な値を推測（またはベンチ後に判定）
             document.getElementById('ram-detail').innerText = "DDR4/5 @ High-Freq";
         } else {
             document.getElementById('ram-cap').innerText = "Unknown";
             document.getElementById('ram-detail').innerText = "N/A";
         }
 
-        // --- OS ---
         const platform = navigator.platform;
         document.getElementById('sys-os').innerText = platform;
     }
@@ -193,9 +185,9 @@
     window.onload = analyze;
 
     document.getElementById('start-btn').onclick = () => {
-        // ここで次の工程（2番のベンチマーク処理）を呼び出す
-        console.log("Starting Benchmark Engineering...");
-        alert("起爆シーケンスを開始します。");
+        // 次の工程である「benchmark_gpu.html」を呼び出します
+        console.log("Redirecting to GPU Stress Test...");
+        window.location.href = "benchmark_gpu.html";
     };
 </script>
 </body>
