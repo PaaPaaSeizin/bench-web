@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AnTuTu V15.4 - THERMAL CATACLYSM X5</title>
+    <title>即落ちベンチ</title>
     <style>
         body { background: #000; color: #ff0000; font-family: 'Courier New', monospace; margin: 0; overflow: hidden; touch-action: none; }
         #ui-layer { position: absolute; inset: 0; z-index: 100; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; }
@@ -22,24 +22,24 @@
 <div id="process-display">READY</div>
 
 <div id="start-screen" class="overlay">
-    <h1 style="font-size: 50px; margin: 0; color: #ff3300;">THERMAL CATACLYSM</h1>
-    <p style="color: #ff3300; margin-bottom: 30px;">V15.4 [X5_PENTALOGY_LOAD]</p>
+    <h1 style="font-size: 50px; margin: 0; color: #ff3300;">クラッシュ ベンチマーク</h1>
+    <p style="color: #ff3300; margin-bottom: 30px;">メモリが貧弱だと即落ちや完走不可などになります。</p>
     <div class="btn-group">
-        <button class="start-btn" onclick="ignite(30)">NORMAL (30s)</button>
-        <button class="start-btn" style="background:#600; color:#fff;" onclick="ignite(300)">STRESS (5m)</button>
+        <button class="start-btn" onclick="ignite(30)">通常(30秒)</button>
+        <button class="start-btn" style="background:#600; color:#fff;" onclick="ignite(300)">ストレス (5分)</button>
     </div>
 </div>
 
 <div id="ui-layer">
     <div class="monitor" style="width: 350px;">
-        <div style="font-size: 10px;">TOTAL_STRESS_SCORE</div>
+        <div style="font-size: 10px;">合計スコア</div>
         <div id="score" class="value">0</div>
         <div id="fps" style="font-size: 20px; color: #ff3300;">FPS: 0.0</div>
     </div>
     <div id="log-stream"></div>
     <div class="monitor" style="width: 100%; border-bottom: 3px solid #ff3300; border-left:none;">
         <div id="timer" style="font-size: 24px; text-align: right; font-weight: bold;">00:00.000</div>
-        <div id="load-info" style="font-size: 9px; color: #ff9900;">CPU: 5-CORE BURST | GPU: PIXEL_ITER X 1,080</div>
+        <div id="load-info" style="font-size: 9px; color: #ff9900;">注意:実行中は端末自体が正常に動作しなくなる場合があります</div>
     </div>
 </div>
 
@@ -158,7 +158,7 @@
             if(elapsed > duration * 1000) { finish(); return; }
 
             const phase = Math.floor(elapsed / 2500) % 3;
-            processDisp.innerText = [">> GPU_STRESS_X5 <<", ">> CPU_STRESS_X5 <<", ">> VRAM_STRESS_X5 <<"][phase];
+            processDisp.innerText = [">> GPU負荷 <<", ">> CPU負荷 <<", ">> VRAM負荷 <<"][phase];
             
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
             gl.uniform1f(uT, now * 0.001);
@@ -305,7 +305,7 @@
             if(elapsed > duration * 1000) { finish(); return; }
 
             const phase = Math.floor(elapsed / 2000) % 3;
-            const labels = [">> HEAT_GEN_GPU <<", ">> CORE_MELT_CPU <<", ">> VRAM_STRESS <<"];
+            const labels = [">> GPU負荷 <<", ">> CPUコア負荷 <<", ">> VRAM負荷 <<"];
             document.getElementById('process-display').innerText = labels[phase];
 
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
